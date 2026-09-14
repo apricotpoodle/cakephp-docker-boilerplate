@@ -3,6 +3,8 @@
 /.env.backup
 /.env.local
 /.env.*.local
+/.env.example.websrv30
+/.env.example.websrv31
 
 # Certificats et clés TLS locaux.
 /localhost.crt
