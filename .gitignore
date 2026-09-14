@@ -1,0 +1,30 @@
+# Configuration locale et secrets : conserver uniquement les modèles .env.example.
+/.env
+/.env.backup
+/.env.local
+/.env.*.local
+
+# Certificats et clés TLS locaux.
+/localhost.crt
+/localhost.key
+/*.pem
+/*.key
+
+# L'application est un dépôt Git autonome, non inclus dans le boilerplate.
+/app/
+
+# Fichiers propres aux postes de travail et aux éditeurs.
+/.vscode/
+/.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Journaux, caches et rapports éventuellement produits à la racine.
+*.log
+/pb_detectés.txt
+/.phpunit.cache/
+/coverage/
+/clover.xml
