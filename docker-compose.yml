@@ -5,6 +5,10 @@ services:
     env_file:
       - .env
 
+    environment:
+      # Nom stable de la machine hôte, injectable dans les alertes techniques.
+      APP_HOST_HOSTNAME: ${APP_HOST_HOSTNAME:-${HOSTNAME:-non-renseigne}}
+
     build:
       context: ./.dockerfile/
       args:

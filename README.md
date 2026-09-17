@@ -57,6 +57,9 @@ Le fichier `.env` est local et ne doit jamais être commité. Il contient notamm
 | `DATABASE_URL` | Connexion MySQL utilisée par l'application. |
 | `DATABASE_TEST_URL` | Connexion MySQL réservée à PHPUnit ; elle doit viser `daetf2_test`. |
 | `MAIL_*` | Paramètres du serveur SMTP ; Mailpit est proposé en local. |
+| `APP_INSTANCE_NAME` | Nom stable de l’instance, affiché dans les alertes techniques. |
+| `TREE_INTEGRITY_ALERT_RECIPIENT` | Destinataire des alertes d’intégrité TreeBehavior. |
+| `APP_HOST_HOSTNAME` | Surcharge facultative du nom d’hôte remonté automatiquement par Docker dans l’alerte. |
 | `SECURITY_SALT` / `SECURITY_CIPHERSEED` | Secrets CakePHP à générer pour chaque environnement. |
 
 Exemples de génération de secrets :
@@ -72,14 +75,27 @@ Ne réutilisez jamais les valeurs fictives de `.env.example` et ne copiez jamais
 
 | Commande | Effet |
 | --- | --- |
-| `make help` / `make menu` | Affiche toutes les commandes disponibles. |
+| `make help` / `make menu` | Affiche les commandes les plus fréquentes. |
 | `make init` | Crée le réseau si nécessaire, construit l'image et démarre les services. |
 | `make up` / `make down` | Démarre / arrête les conteneurs. |
 | `make ps` / `make logs` | Affiche l'état / les journaux du service PHP. |
-| `make php.bash` | Ouvre un shell dans le conteneur PHP. |
+| `make shell` | Ouvre un shell dans le conteneur PHP (`make php.bash` reste disponible). |
 | `make composer.install` | Installe les dépendances de l'application. |
 | `make db.migrate` / `make db.seed` | Applique les migrations / jeux de données CakePHP. |
-| `make cs.check` / `make stan` | Lance PHP_CodeSniffer / PHPStan. |
+| `make check` | Lance PHP_CodeSniffer, PHPStan et les tests unitaires. |
+
+L'aide est organisée par besoin afin de conserver un écran d'accueil court :
+
+| Commande | Contenu |
+| --- | --- |
+| `make help.tests` | Tests ciblés, couverture et rapports. |
+| `make help.maintenance` | Migrations, cache, dépendances et opérations occasionnelles. |
+| `make help.docker` | Docker Compose et réseau. |
+| `make help.all` | Catalogue exhaustif, y compris les noms historiques. |
+| `make tree.check` | Vérifie sans modification les arbres `departments` et `menus`. |
+| `make tree.check.departments` / `make tree.check.menus` | Vérifie un arbre précis. |
+| `make tree.check.config` | Vérifie la configuration des alertes TreeBehavior, sans accéder aux données. |
+| `make tree.alert.test` | Envoie un courriel marqué TEST, sans contrôler ni modifier les arbres. |
 
 ## Tests
 
@@ -88,6 +104,7 @@ Les tests utilisant la base de données doivent impérativement viser MySQL `dae
 | Commande | Portée |
 | --- | --- |
 | `make test.unit` | Entités, politiques et services sans accès MySQL. |
+| `make test.quick` | Alias lisible de `make test.unit`. |
 | `make test.integration` | Tests ORM et fixtures MySQL. |
 | `make test.api` | Tests HTTP des API et contrôleurs web. |
 | `make test.workflow` | Workflow de validation et vues SQL. |
