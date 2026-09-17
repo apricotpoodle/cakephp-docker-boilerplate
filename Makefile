@@ -355,6 +355,7 @@ cs.fix:
 ## stan: Lance l'analyse statique du code (PHPStan)
 stan:
 	@printf "$(INFO_ICO)$(BLUE) Lancement de l'analyse statique (PHPStan)...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) test -x ./vendor/bin/phpstan || { echo "Erreur : PHPStan est absent du volume applicatif. Exécutez 'make composer.install' dans le conteneur, puis relancez cette commande."; exit 1; }
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpstan analyse
 
 ## analyse: Alias lisible de stan

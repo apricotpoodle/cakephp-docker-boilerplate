@@ -84,6 +84,21 @@ Ne réutilisez jamais les valeurs fictives de `.env.example` et ne copiez jamais
 | `make db.migrate` / `make db.seed` | Applique les migrations / jeux de données CakePHP. |
 | `make check` | Lance PHP_CodeSniffer, PHPStan et les tests unitaires. |
 
+### Réparer les outils Composer du conteneur
+
+Le code applicatif, y compris `vendor/`, est monté dans le conteneur depuis `./app`.
+Après un clonage, un changement de dépendances ou un répertoire `vendor/` incomplet,
+réinstallez les dépendances **dans le conteneur** :
+
+```bash
+make composer.install
+```
+
+La commande installe aussi les dépendances de développement, dont PHPStan. Vérifiez
+ensuite avec `make stan`. Si ce dernier signale que son binaire est absent, cette
+réinstallation répare le volume applicatif sans installer Composer ni ses dépendances
+sur l'hôte.
+
 L'aide est organisée par besoin afin de conserver un écran d'accueil court :
 
 | Commande | Contenu |
