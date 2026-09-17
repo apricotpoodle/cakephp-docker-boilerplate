@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.clean test.all test.all.report test.style check
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.clean test.all test.all.report test.style check
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -31,6 +31,7 @@ endif
 PROJECT_NETWORK     ?= devfab
 PROJECT_SUBNET      ?= 10.210.1.0/24
 PHP_SERVICE_NAME    ?= gdaetf
+IDE_HELPER_PATH     ?= src
 
 # Variables dynamiques
 UID                 := $(shell id -u)
@@ -80,6 +81,8 @@ help.all:
 	@printf "\n$(PURPLE)Qualité de code & Dépendances :$(RESET)\n"
 	@printf "  $(GREEN)make composer.install$(RESET) Installe les dépendances PHP.\n"
 	@printf "  $(GREEN)make composer.update$(RESET)  Met à jour les dépendances PHP.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET) Synchronise annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Applique les améliorations de code IDE Helper.\n"
 	@printf "  $(GREEN)make cs.check$(RESET)         Vérifie le style du code (phpcs).\n"
 	@printf "  $(GREEN)make cs.fix$(RESET)           Corrige le style du code (phpcbf).\n"
 	@printf "  $(GREEN)make stan$(RESET)             Lance l'analyse statique du code (PHPStan).\n"
@@ -120,6 +123,8 @@ help:
 	@printf "  $(GREEN)make shell$(RESET)       Ouvrir un shell dans le conteneur PHP.\n"
 	@printf "  $(GREEN)make db.migrate$(RESET)  Appliquer les migrations.\n"
 	@printf "  $(GREEN)make cache.clear$(RESET) Vider les caches CakePHP.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET) Synchroniser les annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Appliquer les améliorations de code IDE Helper.\n"
 	@printf "\n$(PURPLE)Vérifier avant livraison :$(RESET)\n"
 	@printf "  $(GREEN)make check$(RESET)       Style, analyse statique et tests unitaires.\n"
 	@printf "  $(GREEN)make test.quick$(RESET)  Lancer les tests unitaires.\n"
@@ -158,6 +163,8 @@ help.maintenance:
 	@printf "  $(GREEN)make cache.clear$(RESET)         Vide les caches CakePHP.\n"
 	@printf "  $(GREEN)make composer.install$(RESET)    Installe les dépendances verrouillées.\n"
 	@printf "  $(GREEN)make composer.update$(RESET)     Met à jour les dépendances Composer.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET)     Synchronise annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Applique les améliorations de code IDE Helper.\n"
 	@printf "  $(GREEN)make cs.fix$(RESET)              Corrige automatiquement le style PHP.\n"
 	@printf "  $(GREEN)make test.coverage.clean$(RESET) Supprime les rapports PCOV temporaires.\n"
 	@printf "\n$(PURPLE)Intégrité des arbres (lecture seule) :$(RESET)\n"
@@ -297,6 +304,18 @@ composer.install:
 composer.update:
 	@printf "$(COMP_ICO)$(BLUE) Mise à jour des dépendances Composer...$(RESET)\n"
 	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) composer update
+
+## ide-helper.sync: Synchronise les annotations et fichiers d'aide IDE
+ide-helper.sync:
+	@printf "$(INFO_ICO)$(BLUE) Synchronisation des annotations IDE Helper...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake annotate all -r
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake generate code_completion
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake generate phpstorm
+
+## ide-helper.illuminate: Applique les améliorations de code IDE Helper dans src/
+ide-helper.illuminate:
+	@printf "$(WARN_ICO)$(YELLOW) Application des améliorations de code IDE Helper dans $(IDE_HELPER_PATH)...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake illuminate code $(IDE_HELPER_PATH)
 
 ## db.migrate: Applique les migrations de la base de données
 db.migrate:
