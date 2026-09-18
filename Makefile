@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash composer.install composer.update db.migrate db.seed cache.clear cs.check cs.fix stan test.unit test.database.check test.integration test.workflow test.api test.coverage test.coverage.clean test.all test.all.report test.style
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.clean test.all test.all.report test.style check
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -31,6 +31,7 @@ endif
 PROJECT_NETWORK     ?= devfab
 PROJECT_SUBNET      ?= 10.210.1.0/24
 PHP_SERVICE_NAME    ?= gdaetf
+IDE_HELPER_PATH     ?= src
 
 # Variables dynamiques
 UID                 := $(shell id -u)
@@ -53,9 +54,9 @@ WARN_ICO            := ' \U26A0 '
 DELETE_ICO          := ' \U1F5D1 '
 
 # ==============================================================================
-# AIDE (make help)
+# CATALOGUE COMPLET (make help.all)
 # ==============================================================================
-help:
+help.all:
 	@printf "\n$(GREEN)Gestion du projet CakePHP $(PHP_SERVICE_NAME) avec Docker$(RESET)\n\n"
 	@printf "$(PURPLE)Commandes principales :$(RESET)\n"
 	@printf "  $(GREEN)make setup$(RESET)            Prépare l'environnement (réseau Docker).\n"
@@ -80,6 +81,8 @@ help:
 	@printf "\n$(PURPLE)Qualité de code & Dépendances :$(RESET)\n"
 	@printf "  $(GREEN)make composer.install$(RESET) Installe les dépendances PHP.\n"
 	@printf "  $(GREEN)make composer.update$(RESET)  Met à jour les dépendances PHP.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET) Synchronise annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Applique les améliorations de code IDE Helper.\n"
 	@printf "  $(GREEN)make cs.check$(RESET)         Vérifie le style du code (phpcs).\n"
 	@printf "  $(GREEN)make cs.fix$(RESET)           Corrige le style du code (phpcbf).\n"
 	@printf "  $(GREEN)make stan$(RESET)             Lance l'analyse statique du code (PHPStan).\n"
@@ -91,9 +94,103 @@ help:
 	@printf "  $(GREEN)make test.coverage.clean$(RESET) Supprime les rapports de couverture temporaires.\n"
 	@printf "  $(GREEN)make test.all.report$(RESET)  Lance la suite et ouvre un rapport temporaire nettoyé.\n"
 	@printf "  $(GREEN)make test.style$(RESET)       Vérifie le style des tests via PHP_CodeSniffer.\n"
+	@printf "  $(GREEN)make test.api$(RESET)         Lance les tests HTTP sur la base MySQL daetf2_test.\n"
+	@printf "  $(GREEN)make test.database.check$(RESET) Vérifie que PHPUnit cible daetf2_test.\n"
+	@printf "\n$(PURPLE)Maintenance des arbres :$(RESET)\n"
+	@printf "  $(GREEN)make tree.check$(RESET)       Vérifie tous les arbres TreeBehavior sans les modifier.\n"
+	@printf "  $(GREEN)make tree.check.departments$(RESET) Vérifie l’arbre des départements.\n"
+	@printf "  $(GREEN)make tree.check.menus$(RESET) Vérifie l’arbre des menus.\n"
+	@printf "  $(GREEN)make tree.check.config$(RESET) Vérifie la configuration des alertes TreeBehavior.\n"
+	@printf "  $(GREEN)make tree.alert.test$(RESET)  Envoie une alerte marquée TEST, sans accéder aux arbres.\n"
+	@printf "\n$(PURPLE)Navigation et alias :$(RESET)\n"
+	@printf "  $(GREEN)make help$(RESET) / $(GREEN)menu$(RESET) / $(GREEN)help.tests$(RESET) / $(GREEN)help.maintenance$(RESET) / $(GREEN)help.docker$(RESET)\n"
+	@printf "  $(GREEN)make shell$(RESET) (php.bash) / $(GREEN)make lint$(RESET) (cs.check) / $(GREEN)make analyse$(RESET) (stan)\n"
+	@printf "  $(GREEN)make test.quick$(RESET) (test.unit) / $(GREEN)make check$(RESET)\n"
 
 ## menu: Alias de help, conserve la compatibilité avec les usages existants
 menu: help
+
+## help: Affiche les commandes les plus fréquentes
+help:
+	@printf "\n$(GREEN)GDAETF2 · environnement CakePHP/Docker$(RESET)\n\n"
+	@printf "$(PURPLE)Démarrage :$(RESET)\n"
+	@printf "  $(GREEN)make init$(RESET)        Construire et démarrer l'environnement.\n"
+	@printf "  $(GREEN)make up$(RESET)          Démarrer les conteneurs.\n"
+	@printf "  $(GREEN)make down$(RESET)        Arrêter les conteneurs.\n"
+	@printf "  $(GREEN)make ps$(RESET)          Afficher leur état.\n"
+	@printf "  $(GREEN)make logs$(RESET)        Suivre les journaux PHP.\n"
+	@printf "\n$(PURPLE)Développement :$(RESET)\n"
+	@printf "  $(GREEN)make shell$(RESET)       Ouvrir un shell dans le conteneur PHP.\n"
+	@printf "  $(GREEN)make db.migrate$(RESET)  Appliquer les migrations.\n"
+	@printf "  $(GREEN)make cache.clear$(RESET) Vider les caches CakePHP.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET) Synchroniser les annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Appliquer les améliorations de code IDE Helper.\n"
+	@printf "\n$(PURPLE)Vérifier avant livraison :$(RESET)\n"
+	@printf "  $(GREEN)make check$(RESET)       Style, analyse statique et tests unitaires.\n"
+	@printf "  $(GREEN)make test.quick$(RESET)  Lancer les tests unitaires.\n"
+	@printf "  $(GREEN)make test.all$(RESET)    Lancer la suite PHPUnit complète.\n"
+	@printf "\n$(PURPLE)Maintenance des arbres :$(RESET)\n"
+	@printf "  $(GREEN)make tree.check.config$(RESET) Vérifier la configuration des alertes.\n"
+	@printf "  $(GREEN)make tree.alert.test$(RESET)   Envoyer un courriel de test.\n"
+	@printf "  $(GREEN)make tree.check$(RESET)        Vérifier les arbres sans les modifier.\n"
+	@printf "\n$(PURPLE)Aide thématique :$(RESET)\n"
+	@printf "  $(GREEN)make help.tests$(RESET)        Tests et rapports.\n"
+	@printf "  $(GREEN)make help.maintenance$(RESET)  Maintenance et dépendances.\n"
+	@printf "  $(GREEN)make help.docker$(RESET)       Docker et réseau.\n"
+	@printf "  $(GREEN)make help.all$(RESET)          Catalogue complet.\n"
+
+## help.tests: Affiche les commandes de test et de vérification
+help.tests:
+	@printf "\n$(GREEN)Tests et vérifications$(RESET)\n\n"
+	@printf "  $(GREEN)make check$(RESET)            Style, PHPStan et tests unitaires.\n"
+	@printf "  $(GREEN)make lint$(RESET)             Vérifie le style PHP (phpcs).\n"
+	@printf "  $(GREEN)make analyse$(RESET)          Lance PHPStan.\n"
+	@printf "  $(GREEN)make test.quick$(RESET)       Tests unitaires sans MySQL.\n"
+	@printf "  $(GREEN)make test.integration$(RESET) Tests ORM sur daetf2_test.\n"
+	@printf "  $(GREEN)make test.workflow$(RESET)    Tests workflow et vues SQL sur daetf2_test.\n"
+	@printf "  $(GREEN)make test.api$(RESET)         Tests HTTP sur daetf2_test.\n"
+	@printf "  $(GREEN)make test.all$(RESET)         Suite PHPUnit complète sur daetf2_test.\n"
+	@printf "  $(GREEN)make test.coverage$(RESET)    Rapport de couverture PCOV temporaire.\n"
+	@printf "  $(GREEN)make test.all.report$(RESET)  Suite complète avec rapport temporaire.\n"
+	@printf "  $(GREEN)make test.style$(RESET)       Style des tests.\n"
+	@printf "\n$(YELLOW)Les tests MySQL utilisent uniquement la base dédiée daetf2_test.\n$(RESET)"
+
+## help.maintenance: Affiche les opérations occasionnelles ou sensibles
+help.maintenance:
+	@printf "\n$(GREEN)Maintenance et dépendances$(RESET)\n\n"
+	@printf "  $(GREEN)make db.migrate$(RESET)          Applique les migrations de la base applicative.\n"
+	@printf "  $(GREEN)make db.seed$(RESET)             Charge les jeux de données.\n"
+	@printf "  $(GREEN)make cache.clear$(RESET)         Vide les caches CakePHP.\n"
+	@printf "  $(GREEN)make composer.install$(RESET)    Installe les dépendances verrouillées.\n"
+	@printf "  $(GREEN)make composer.update$(RESET)     Met à jour les dépendances Composer.\n"
+	@printf "  $(GREEN)make ide-helper.sync$(RESET)     Synchronise annotations et fichiers d'aide IDE.\n"
+	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Applique les améliorations de code IDE Helper.\n"
+	@printf "  $(GREEN)make cs.fix$(RESET)              Corrige automatiquement le style PHP.\n"
+	@printf "  $(GREEN)make test.coverage.clean$(RESET) Supprime les rapports PCOV temporaires.\n"
+	@printf "\n$(PURPLE)Intégrité des arbres (lecture seule) :$(RESET)\n"
+	@printf "  $(GREEN)make tree.check$(RESET)             Vérifie tous les arbres TreeBehavior.\n"
+	@printf "  $(GREEN)make tree.check.departments$(RESET) Vérifie l'arbre des départements.\n"
+	@printf "  $(GREEN)make tree.check.menus$(RESET)       Vérifie l'arbre des menus.\n"
+	@printf "  $(GREEN)make tree.check.config$(RESET)      Vérifie la configuration des alertes.\n"
+	@printf "  $(GREEN)make tree.alert.test$(RESET)        Envoie un courriel de test sans contrôler les données.\n"
+	@printf "\n$(YELLOW)La récupération sera ajoutée séparément après validation humaine du diagnostic.\n$(RESET)"
+
+## help.docker: Affiche les commandes Docker et réseau
+help.docker:
+	@printf "\n$(GREEN)Docker et réseau$(RESET)\n\n"
+	@printf "  $(GREEN)make setup$(RESET)           Crée le réseau Docker externe si nécessaire.\n"
+	@printf "  $(GREEN)make init$(RESET)            Construit l'image et démarre les conteneurs.\n"
+	@printf "  $(GREEN)make up$(RESET)              Démarre les conteneurs.\n"
+	@printf "  $(GREEN)make down$(RESET)            Arrête et supprime les conteneurs.\n"
+	@printf "  $(GREEN)make clean$(RESET)           Arrête les conteneurs.\n"
+	@printf "  $(GREEN)make ps$(RESET)              Affiche l'état des conteneurs.\n"
+	@printf "  $(GREEN)make logs$(RESET)            Suit les journaux du service PHP.\n"
+	@printf "  $(GREEN)make config$(RESET)          Valide la configuration Docker Compose.\n"
+	@printf "  $(GREEN)make network.list$(RESET)    Liste les réseaux Docker.\n"
+	@printf "  $(GREEN)make network.inspect$(RESET) Inspecte un réseau.\n"
+	@printf "  $(GREEN)make network.create$(RESET)  Crée un réseau.\n"
+	@printf "  $(GREEN)make network.delete$(RESET)  Supprime un réseau.\n"
+	@printf "\n$(YELLOW)network.delete est destructif et demande une saisie interactive.\n$(RESET)"
 
 # ==============================================================================
 # COMMANDES DE GESTION DU PROJET
@@ -195,6 +292,9 @@ php.bash:
 	@printf "$(BASH_ICO)$(BLUE) Ouverture d'un shell Bash dans le conteneur $(PHP_SERVICE_NAME)...$(RESET)\n"
 	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bash -l
 
+## shell: Alias lisible de php.bash
+shell: php.bash
+
 ## composer.install: Installe les dépendances Composer
 composer.install:
 	@printf "$(COMP_ICO)$(BLUE) Installation des dépendances Composer...$(RESET)\n"
@@ -204,6 +304,18 @@ composer.install:
 composer.update:
 	@printf "$(COMP_ICO)$(BLUE) Mise à jour des dépendances Composer...$(RESET)\n"
 	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) composer update
+
+## ide-helper.sync: Synchronise les annotations et fichiers d'aide IDE
+ide-helper.sync:
+	@printf "$(INFO_ICO)$(BLUE) Synchronisation des annotations IDE Helper...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake annotate all -r
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake generate code_completion
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake generate phpstorm
+
+## ide-helper.illuminate: Applique les améliorations de code IDE Helper dans src/
+ide-helper.illuminate:
+	@printf "$(WARN_ICO)$(YELLOW) Application des améliorations de code IDE Helper dans $(IDE_HELPER_PATH)...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake illuminate code $(IDE_HELPER_PATH)
 
 ## db.migrate: Applique les migrations de la base de données
 db.migrate:
@@ -221,12 +333,38 @@ cache.clear:
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake cache clear_all
 
 # ==============================================================================
+# MAINTENANCE DES ARBRES
+# ==============================================================================
+## tree.check: Vérifie toutes les tables utilisant TreeBehavior sans les modifier
+tree.check:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity check
+
+## tree.check.departments: Vérifie l'arbre des départements sans le modifier
+tree.check.departments:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity check --table=departments
+
+## tree.check.menus: Vérifie l'arbre des menus sans le modifier
+tree.check.menus:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity check --table=menus
+
+## tree.check.config: Vérifie la configuration des alertes TreeBehavior sans accéder aux données
+tree.check.config:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity check --check-config
+
+## tree.alert.test: Envoie une alerte de test sans interroger ni modifier les arbres
+tree.alert.test:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity alert-test
+
+# ==============================================================================
 # COMMANDES DE QUALITÉ DE CODE
 # ==============================================================================
 ## cs.check: Vérifie le style du code (PHP_CodeSniffer)
 cs.check:
 	@printf "$(INFO_ICO)$(BLUE) Vérification du style de code (phpcs)...$(RESET)\n"
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpcs
+
+## lint: Alias lisible de cs.check
+lint: cs.check
 
 ## cs.fix: Corrige automatiquement le style du code (PHP Code Beautifier)
 cs.fix:
@@ -236,7 +374,11 @@ cs.fix:
 ## stan: Lance l'analyse statique du code (PHPStan)
 stan:
 	@printf "$(INFO_ICO)$(BLUE) Lancement de l'analyse statique (PHPStan)...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) test -x ./vendor/bin/phpstan || { echo "Erreur : PHPStan est absent du volume applicatif. Exécutez 'make composer.install' dans le conteneur, puis relancez cette commande."; exit 1; }
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpstan analyse
+
+## analyse: Alias lisible de stan
+analyse: stan
 
 # ==============================================================================
 # TESTS
@@ -245,6 +387,12 @@ stan:
 test.unit:
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests unitaires...$(RESET)\n"
 	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --no-configuration --bootstrap config/bootstrap.php --testdox tests/TestCase/Policy tests/TestCase/Model/Entity tests/TestCase/Model/Table/ApplicationformsValidationTest.php tests/TestCase/Model/Table/UsersValidationTest.php tests/TestCase/Model/Table/CommentsValidationTest.php tests/TestCase/Model/Table/DepartmentsTreeSelectTest.php tests/TestCase/Service
+
+## test.quick: Alias lisible de test.unit
+test.quick: test.unit
+
+## check: Vérifie style, analyse statique et tests unitaires
+check: lint analyse test.quick
 
 ## test.database.check: Vérifie que PHPUnit cible exclusivement la base MySQL daetf2_test
 test.database.check:
