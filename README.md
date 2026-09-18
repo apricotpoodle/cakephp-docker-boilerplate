@@ -81,6 +81,7 @@ Ne réutilisez jamais les valeurs fictives de `.env.example` et ne copiez jamais
 | `make ps` / `make logs` | Affiche l'état / les journaux du service PHP. |
 | `make shell` | Ouvre un shell dans le conteneur PHP (`make php.bash` reste disponible). |
 | `make composer.install` | Installe les dépendances de l'application. |
+| `make ide-helper.sync` | Actualise les annotations et les fichiers d’aide IDE CakePHP. |
 | `make db.migrate` / `make db.seed` | Applique les migrations / jeux de données CakePHP. |
 | `make check` | Lance PHP_CodeSniffer, PHPStan et les tests unitaires. |
 
@@ -139,6 +140,22 @@ Les tests utilisant la base de données doivent impérativement viser MySQL `dae
 Les rapports sont copiés dans un répertoire `/tmp/daetf2-coverage.*` sur l'hôte. Les rapports âgés de plus de 24 heures sont supprimés au lancement suivant ; `make test.coverage.clean` les efface tous immédiatement.
 
 Les commandes courantes désactivent Xdebug et PCOV afin de préserver leurs performances. Xdebug est réservé au débogage interactif.
+
+### Validation avant partage
+
+Avant de partager une branche ou de demander sa fusion, exécuter localement :
+
+```sh
+make test.all
+make test.style
+make cs.check
+make stan
+```
+
+Ces commandes s’exécutent dans Docker et les tests de base de données ciblent
+exclusivement MySQL `daetf2_test`. Pour une évolution transversale ou une
+livraison importante, exécuter aussi `make test.coverage` afin de consulter les
+rapports Clover et HTML temporaires générés sous `/tmp`.
 
 ## Git et réutilisation
 
