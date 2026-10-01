@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.clean test.all test.all.report test.style check
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -91,6 +91,7 @@ help.all:
 	@printf "  $(GREEN)make test.all$(RESET)         Lance toute la suite PHPUnit avec le détail des scénarios.\n"
 	@printf "  $(GREEN)make test.workflow$(RESET)    Lance les tests du workflow et des vues SQL.\n"
 	@printf "  $(GREEN)make test.coverage$(RESET)    Produit les rapports Clover XML et HTML temporaires.\n"
+	@printf "  $(GREEN)make test.coverage.policies$(RESET) Vérifie 100 %% des lignes des policies.\n"
 	@printf "  $(GREEN)make test.coverage.clean$(RESET) Supprime les rapports de couverture temporaires.\n"
 	@printf "  $(GREEN)make test.all.report$(RESET)  Lance la suite et ouvre un rapport temporaire nettoyé.\n"
 	@printf "  $(GREEN)make test.style$(RESET)       Vérifie le style des tests via PHP_CodeSniffer.\n"
@@ -151,6 +152,7 @@ help.tests:
 	@printf "  $(GREEN)make test.api$(RESET)         Tests HTTP sur daetf2_test.\n"
 	@printf "  $(GREEN)make test.all$(RESET)         Suite PHPUnit complète sur daetf2_test.\n"
 	@printf "  $(GREEN)make test.coverage$(RESET)    Rapport de couverture PCOV temporaire.\n"
+	@printf "  $(GREEN)make test.coverage.policies$(RESET) Vérifie 100 %% des lignes des policies.\n"
 	@printf "  $(GREEN)make test.all.report$(RESET)  Suite complète avec rapport temporaire.\n"
 	@printf "  $(GREEN)make test.style$(RESET)       Style des tests.\n"
 	@printf "\n$(YELLOW)Les tests MySQL utilisent uniquement la base dédiée daetf2_test.\n$(RESET)"
@@ -392,7 +394,7 @@ test.unit:
 test.quick: test.unit
 
 ## check: Vérifie style, analyse statique et tests unitaires
-check: lint analyse test.quick
+check: lint analyse test.quick test.coverage.policies
 
 ## test.database.check: Vérifie que PHPUnit cible exclusivement la base MySQL daetf2_test
 test.database.check:
@@ -436,6 +438,11 @@ test.coverage: test.database.check
 		printf "$(WARN_ICO) Navigateur introuvable : ouvrez %s manuellement.\n" "$$host_report_dir/html/index.html"; \
 	fi; \
 	exit "$$test_status"
+
+## test.coverage.policies: Vérifie que chaque policy est couverte à 100 % sur les lignes
+test.coverage.policies: test.database.check
+	@printf "$(CAKE_ICO)$(BLUE) Vérification de la couverture des policies...$(RESET)\n"
+	@docker compose exec -T -e XDEBUG_MODE=off -e PCOV_ENABLED=1 -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) sh -lc './vendor/bin/phpunit --coverage-clover /tmp/daetf2-policy-coverage.xml --coverage-filter src/Policy tests/TestCase/Policy; status=$$?; if [ "$$status" -eq 0 ]; then php tools/check-policy-coverage.php /tmp/daetf2-policy-coverage.xml; status=$$?; fi; rm -f /tmp/daetf2-policy-coverage.xml; exit "$$status"'
 
 ## test.coverage.clean: Supprime les rapports PCOV temporaires présents sur l'hôte
 test.coverage.clean:
