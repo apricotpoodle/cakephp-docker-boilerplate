@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -95,6 +95,7 @@ help.all:
 	@printf "  $(GREEN)make test.coverage.clean$(RESET) Supprime les rapports de couverture temporaires.\n"
 	@printf "  $(GREEN)make test.all.report$(RESET)  Lance la suite et ouvre un rapport temporaire nettoyé.\n"
 	@printf "  $(GREEN)make test.style$(RESET)       Vérifie le style des tests via PHP_CodeSniffer.\n"
+	@printf "  $(GREEN)make check.all$(RESET)        Vérification complète avant livraison.\n"
 	@printf "  $(GREEN)make test.api$(RESET)         Lance les tests HTTP sur la base MySQL daetf2_test.\n"
 	@printf "  $(GREEN)make test.database.check$(RESET) Vérifie que PHPUnit cible daetf2_test.\n"
 	@printf "\n$(PURPLE)Maintenance des arbres :$(RESET)\n"
@@ -128,6 +129,7 @@ help:
 	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Appliquer les améliorations de code IDE Helper.\n"
 	@printf "\n$(PURPLE)Vérifier avant livraison :$(RESET)\n"
 	@printf "  $(GREEN)make check$(RESET)       Style, analyse statique et tests unitaires.\n"
+	@printf "  $(GREEN)make check.all$(RESET)   Vérification complète avant livraison.\n"
 	@printf "  $(GREEN)make test.quick$(RESET)  Lancer les tests unitaires.\n"
 	@printf "  $(GREEN)make test.all$(RESET)    Lancer la suite PHPUnit complète.\n"
 	@printf "\n$(PURPLE)Maintenance des arbres :$(RESET)\n"
@@ -144,6 +146,7 @@ help:
 help.tests:
 	@printf "\n$(GREEN)Tests et vérifications$(RESET)\n\n"
 	@printf "  $(GREEN)make check$(RESET)            Style, PHPStan et tests unitaires.\n"
+	@printf "  $(GREEN)make check.all$(RESET)        Vérification complète avant livraison.\n"
 	@printf "  $(GREEN)make lint$(RESET)             Vérifie le style PHP (phpcs).\n"
 	@printf "  $(GREEN)make analyse$(RESET)          Lance PHPStan.\n"
 	@printf "  $(GREEN)make test.quick$(RESET)       Tests unitaires sans MySQL.\n"
@@ -395,6 +398,41 @@ test.quick: test.unit
 
 ## check: Vérifie style, analyse statique et tests unitaires
 check: lint analyse test.quick test.coverage.policies
+
+## check.all: Vérifie qualité, tests unitaires, couverture, intégration, API et style des tests
+check.all:
+	@set -u; \
+	report_file=$$(mktemp /tmp/daetf2-check-all.XXXXXX.txt); \
+	status=0; \
+	trap 'rm -f "$$report_file"' EXIT HUP INT TERM; \
+	printf "\n+-------------------- Vérification complète --------------------\n"; \
+	printf "| %-42s | %-10s | %-8s |\n" "Phase" "Résultat" "Durée"; \
+	printf "|--------------------------------------------|------------|----------|\n"; \
+	run_phase() { \
+		label="$$1"; target="$$2"; \
+		started=$$(date +%s); \
+		if $(MAKE) --no-print-directory "$$target" >"$$report_file" 2>&1; then \
+			result="OK"; \
+		else \
+			result="ÉCHEC"; status=1; \
+		fi; \
+		elapsed=$$(( $$(date +%s) - started )); \
+		printf "| %-42s | %-10s | %5ss   |\n" "$$label" "$$result" "$$elapsed"; \
+		if [ "$$result" = "ÉCHEC" ]; then \
+			printf "\nSortie de la phase échouée ($$target) :\n"; \
+			tail -n 80 "$$report_file"; \
+		fi; \
+	}; \
+	run_phase "Qualité, analyse et tests unitaires" "check"; \
+	run_phase "Suite PHPUnit complète" "test.all"; \
+	run_phase "Style des tests" "test.style"; \
+	printf "|--------------------------------------------|------------|----------|\n"; \
+	if [ "$$status" -eq 0 ]; then \
+		printf "Résultat global : OK\n\n"; \
+	else \
+		printf "Résultat global : ÉCHEC\n\n"; \
+	fi; \
+	exit "$$status"
 
 ## test.database.check: Vérifie que PHPUnit cible exclusivement la base MySQL daetf2_test
 test.database.check:
