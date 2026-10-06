@@ -23,6 +23,10 @@ RUN groupmod -g ${GID} www-data \
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
+    libonig-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     zip \
     unzip \
     git \
@@ -31,9 +35,10 @@ RUN apt-get update && apt-get install -y \
 # ---------------------------------------------------------
 # 3. Extensions PHP (Spécifiques CakePHP 5.3)
 # ---------------------------------------------------------
-# Configuration et installation de l'extension 'intl' (obligatoire pour CakePHP)
+# Configuration et installation des extensions requises par CakePHP et mPDF.
 RUN docker-php-ext-configure intl \
-    && docker-php-ext-install intl pdo_mysql zip
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install intl gd mbstring pdo_mysql zip
 
 # ---------------------------------------------------------
 # 4. Outils de développement : Xdebug et PCOV
