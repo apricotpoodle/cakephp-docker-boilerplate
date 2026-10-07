@@ -32,6 +32,7 @@ PROJECT_NETWORK     ?= devfab
 PROJECT_SUBNET      ?= 10.210.1.0/24
 PHP_SERVICE_NAME    ?= gdaetf
 IDE_HELPER_PATH     ?= src
+PHPSTAN_MEMORY_LIMIT ?= 512M
 
 # Variables dynamiques
 UID                 := $(shell id -u)
@@ -380,7 +381,7 @@ cs.fix:
 stan:
 	@printf "$(INFO_ICO)$(BLUE) Lancement de l'analyse statique (PHPStan)...$(RESET)\n"
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) test -x ./vendor/bin/phpstan || { echo "Erreur : PHPStan est absent du volume applicatif. Exécutez 'make composer.install' dans le conteneur, puis relancez cette commande."; exit 1; }
-	@docker compose exec -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpstan analyse
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)
 
 ## analyse: Alias lisible de stan
 analyse: stan
