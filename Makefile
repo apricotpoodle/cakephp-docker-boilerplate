@@ -436,7 +436,7 @@ analyse: stan
 ## test.unit: Lance les tests unitaires sans migration ni accès à la base de données
 test.unit:
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests unitaires...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --no-configuration --bootstrap config/bootstrap.php --testdox tests/TestCase/Policy tests/TestCase/Model/Entity tests/TestCase/Model/Table/ApplicationformsValidationTest.php tests/TestCase/Model/Table/UsersValidationTest.php tests/TestCase/Model/Table/CommentsValidationTest.php tests/TestCase/Model/Table/DepartmentsTreeSelectTest.php tests/TestCase/Service
+	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --configuration phpunit.unit.xml --testdox
 
 ## test.quick: Alias lisible de test.unit
 test.quick: test.unit
