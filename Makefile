@@ -441,10 +441,13 @@ test.unit:
 ## test.quick: Alias lisible de test.unit
 test.quick: test.unit
 
-## check: Vérifie style, analyse statique et tests unitaires
-check: lint analyse test.quick test.coverage.policies
+## check.quality: Vérifie le style, l'analyse statique et la couverture des policies
+check.quality: lint analyse test.coverage.policies
 
-## check.all: Vérifie qualité, tests unitaires, couverture, intégration, API et style des tests
+## check: Vérifie style, analyse statique et tests unitaires
+check: check.quality test.quick
+
+## check.all: Vérifie qualité, couverture, suite PHPUnit complète et style des tests
 check.all:
 	@set -u; \
 	report_file=$$(mktemp /tmp/daetf2-check-all.XXXXXX.txt); \
@@ -468,7 +471,7 @@ check.all:
 			tail -n 80 "$$report_file"; \
 		fi; \
 	}; \
-	run_phase "Qualité, analyse et tests unitaires" "check"; \
+	run_phase "Qualité, analyse et couverture" "check.quality"; \
 	run_phase "Suite PHPUnit complète" "test.all"; \
 	run_phase "Style des tests" "test.style"; \
 	printf "|--------------------------------------------|------------|----------|\n"; \
