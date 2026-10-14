@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear migration.connection-check migration.export migration.mapping migration.quality tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -33,6 +33,12 @@ PROJECT_SUBNET      ?= 10.210.1.0/24
 PHP_SERVICE_NAME    ?= gdaetf
 IDE_HELPER_PATH     ?= src
 PHPSTAN_MEMORY_LIMIT ?= 512M
+MIGRATION_EXPORT_DIR ?= /var/www/html/tmp/migration/exports
+MIGRATION_REPORT_DIR ?= /var/www/html/tmp/migration/reports
+MIGRATION_MAPPING_DIR ?= /var/www/html/tmp/migration/mappings
+MIGRATION_HOST_DIR   ?= app/tmp/migration
+
+MIGRATION_COMPOSE_FILES := -f docker-compose.yml -f docker-compose.migration.yml
 
 # Variables dynamiques
 UID                 := $(shell id -u)
@@ -126,6 +132,10 @@ help:
 	@printf "  $(GREEN)make shell$(RESET)       Ouvrir un shell dans le conteneur PHP.\n"
 	@printf "  $(GREEN)make db.migrate$(RESET)  Appliquer les migrations.\n"
 	@printf "  $(GREEN)make cache.clear$(RESET) Vider les caches CakePHP.\n"
+	@printf "  $(GREEN)make migration.connection-check$(RESET) Vérifier l'accès à l'ancienne base.\n"
+	@printf "  $(GREEN)make migration.export$(RESET) Exporter les CSV historiques.\n"
+	@printf "  $(GREEN)make migration.mapping$(RESET) Construire les mappings départements/CGR.\n"
+	@printf "  $(GREEN)make migration.quality$(RESET) Contrôler les CSV de migration.\n"
 	@printf "  $(GREEN)make ide-helper.sync$(RESET) Synchroniser les annotations et fichiers d'aide IDE.\n"
 	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Appliquer les améliorations de code IDE Helper.\n"
 	@printf "\n$(PURPLE)Vérifier avant livraison :$(RESET)\n"
@@ -169,6 +179,10 @@ help.maintenance:
 	@printf "  $(GREEN)make cache.clear$(RESET)         Vide les caches CakePHP.\n"
 	@printf "  $(GREEN)make composer.install$(RESET)    Installe les dépendances verrouillées.\n"
 	@printf "  $(GREEN)make composer.update$(RESET)     Met à jour les dépendances Composer.\n"
+	@printf "  $(GREEN)make migration.connection-check$(RESET) Vérifie l'accès à la base historique.\n"
+	@printf "  $(GREEN)make migration.export$(RESET)     Exporte les CSV historiques.\n"
+	@printf "  $(GREEN)make migration.mapping$(RESET)    Construit les mappings départements/CGR.\n"
+	@printf "  $(GREEN)make migration.quality$(RESET)    Contrôle les exports CSV.\n"
 	@printf "  $(GREEN)make ide-helper.sync$(RESET)     Synchronise annotations et fichiers d'aide IDE.\n"
 	@printf "  $(GREEN)make ide-helper.illuminate$(RESET) Applique les améliorations de code IDE Helper.\n"
 	@printf "  $(GREEN)make cs.fix$(RESET)              Corrige automatiquement le style PHP.\n"
@@ -337,6 +351,36 @@ db.seed:
 cache.clear:
 	@printf "$(DELETE_ICO)$(BLUE) Vidage des caches CakePHP...$(RESET)\n"
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake cache clear_all
+
+# ==============================================================================
+# MIGRATION DEPUIS L'ANCIENNE BASE
+# ==============================================================================
+## migration.connection-check: Vérifie l'accès en lecture à la base historique
+migration.connection-check:
+	@printf "$(INFO_ICO)$(BLUE) Vérification de la connexion à la base historique...$(RESET)\n"
+	@docker compose $(MIGRATION_COMPOSE_FILES) run --rm --no-deps migration-export \
+		mysql --protocol=tcp --host="$${LEGACY_DB_HOST}" --port="$${LEGACY_DB_PORT:-3306}" \
+		--user="$${LEGACY_DB_USERNAME}" --database="$${LEGACY_DB_NAME:-dae}" \
+		--default-character-set=utf8 --batch --execute="SELECT VERSION() AS version, DATABASE() AS database_name;"
+
+## migration.export: Ouvre le client MySQL historique avec les requêtes de migration disponibles
+migration.export:
+	@printf "$(INFO_ICO)$(BLUE) Export automatisé des données historiques...$(RESET)\n"
+	@mkdir -p $(MIGRATION_HOST_DIR)/exports
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) php tools/migration/export.php
+
+## migration.quality: Contrôle les CSV historiques sans interroger MySQL
+migration.quality:
+	@printf "$(INFO_ICO)$(BLUE) Contrôle des CSV de migration...$(RESET)\n"
+	@mkdir -p $(MIGRATION_HOST_DIR)/reports
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake migration_quality \
+		$(MIGRATION_EXPORT_DIR) --report-dir $(MIGRATION_REPORT_DIR)
+
+## migration.mapping: Construit les départements historiques et la matrice CGR
+migration.mapping:
+	@printf "$(INFO_ICO)$(BLUE) Construction des correspondances historiques...$(RESET)\n"
+	@mkdir -p $(MIGRATION_HOST_DIR)/mappings
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) php tools/migration/build-reference-mappings.php
 
 # ==============================================================================
 # MAINTENANCE DES ARBRES

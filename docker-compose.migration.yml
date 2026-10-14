@@ -1,0 +1,23 @@
+services:
+  migration-export:
+    image: ${LEGACY_MYSQL_CLIENT_IMAGE:-mysql:5.6}
+    profiles:
+      - migration
+    environment:
+      LEGACY_DB_HOST: ${LEGACY_DB_HOST:?LEGACY_DB_HOST est obligatoire}
+      LEGACY_DB_PORT: ${LEGACY_DB_PORT:-3306}
+      LEGACY_DB_NAME: ${LEGACY_DB_NAME:-dae}
+      LEGACY_DB_USERNAME: ${LEGACY_DB_USERNAME:?LEGACY_DB_USERNAME est obligatoire}
+      MYSQL_PWD: ${LEGACY_DB_PASSWORD:?LEGACY_DB_PASSWORD est obligatoire}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./app/docs/migration:/migration:ro
+      - ./app/tmp/migration:/output
+    networks:
+      - migration-network
+
+networks:
+  migration-network:
+    name: ${PROJECT_NETWORK:-devfab}
+    external: true
