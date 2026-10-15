@@ -382,6 +382,12 @@ migration.mapping:
 	@mkdir -p $(MIGRATION_HOST_DIR)/mappings
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) php tools/migration/build-reference-mappings.php
 
+## migration.import.departments: Simule l'import des sociétés, services et CGR
+migration.import.departments:
+	@printf "$(INFO_ICO)$(BLUE) Simulation de l'import des sociétés, services et CGR...$(RESET)\n"
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake migration_import_departments \
+		--source-dir $(MIGRATION_EXPORT_DIR) --report-dir $(MIGRATION_REPORT_DIR)
+
 # ==============================================================================
 # MAINTENANCE DES ARBRES
 # ==============================================================================
