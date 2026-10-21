@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear migration.connection-check migration.export migration.mapping migration.quality tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear migration.connection-check migration.export migration.mapping migration.quality tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test integrity.audit cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -111,6 +111,7 @@ help.all:
 	@printf "  $(GREEN)make tree.check.menus$(RESET) Vérifie l’arbre des menus.\n"
 	@printf "  $(GREEN)make tree.check.config$(RESET) Vérifie la configuration des alertes TreeBehavior.\n"
 	@printf "  $(GREEN)make tree.alert.test$(RESET)  Envoie une alerte marquée TEST, sans accéder aux arbres.\n"
+	@printf "  $(GREEN)make integrity.audit$(RESET)  Audite globalement l’intégrité sans modifier les données.\n"
 	@printf "\n$(PURPLE)Navigation et alias :$(RESET)\n"
 	@printf "  $(GREEN)make help$(RESET) / $(GREEN)menu$(RESET) / $(GREEN)help.tests$(RESET) / $(GREEN)help.maintenance$(RESET) / $(GREEN)help.docker$(RESET)\n"
 	@printf "  $(GREEN)make shell$(RESET) (php.bash) / $(GREEN)make lint$(RESET) (cs.check) / $(GREEN)make analyse$(RESET) (stan)\n"
@@ -410,6 +411,10 @@ tree.check.config:
 ## tree.alert.test: Envoie une alerte de test sans interroger ni modifier les arbres
 tree.alert.test:
 	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake tree integrity alert-test
+
+## integrity.audit: Audite toutes les catégories d’intégrité sans les modifier
+integrity.audit:
+	@docker compose exec -e XDEBUG_MODE=off -u www-data $(PHP_SERVICE_NAME) bin/cake integrity audit
 
 # ==============================================================================
 # COMMANDES DE QUALITÉ DE CODE

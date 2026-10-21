@@ -111,6 +111,7 @@ L'aide est organisée par besoin afin de conserver un écran d'accueil court :
 | `make tree.check` | Vérifie sans modification les arbres `departments` et `menus`. |
 | `make tree.check.departments` / `make tree.check.menus` | Vérifie un arbre précis. |
 | `make tree.check.config` | Vérifie la configuration des alertes TreeBehavior, sans accéder aux données. |
+| `make integrity.audit` | Exécute l’audit global d’intégrité en lecture seule (références, workflow, arbres, commentaires et vues). |
 | `make tree.alert.test` | Envoie un courriel marqué TEST, sans contrôler ni modifier les arbres. |
 
 ## Tests
