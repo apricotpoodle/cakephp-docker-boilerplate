@@ -148,8 +148,16 @@ Un changement est terminé uniquement lorsque :
 - Le dépôt applicatif `app/` suit le Feature Branch Flow : ne pas développer
   directement sur `main`.
 - Les branches suivent notamment `feature/`, `fix/` ou `refactor/`.
+- Avant toute modification de code, vérifier et annoncer à l’utilisateur la
+  branche active du dépôt concerné, puis proposer une nouvelle branche dédiée
+  au travail. Attendre sa confirmation explicite avant de créer la branche et
+  de modifier le code. Ne jamais développer sur la branche déjà active ni
+  réutiliser une branche préexistante ; si le nom proposé existe déjà, le
+  signaler et proposer un nom inédit.
 - Les commits sont atomiques et utilisent Conventional Commits, avec une
   description en français, par exemple :
   `feat(utilisateurs): ajoute le filtre par département`.
+  Les commits n'ont pas simplement un titre mais aussi un corps aussi souvent
+  que possible.
 - Ne pas créer de branche, commit, push, pull request, fusion ou exécuter
   `finish_feature` sans confirmation explicite de l’utilisateur.
