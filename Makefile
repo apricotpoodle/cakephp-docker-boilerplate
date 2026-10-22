@@ -501,7 +501,7 @@ test.database.check:
 ## test.integration: Lance les tests ORM avec fixtures et migrations sur daetf2_test
 test.integration: test.database.check
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests d'intégration ORM...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox tests/TestCase/Model/Table
+	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox tests/TestCase/Model/Table tests/TestCase/Integration/Service
 
 ## test.workflow: Lance les tests du workflow de validation et des vues SQL sur daetf2_test
 test.workflow: test.database.check
