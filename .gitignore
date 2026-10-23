@@ -27,6 +27,7 @@ Thumbs.db
 # Journaux, caches et rapports éventuellement produits à la racine.
 *.log
 /pb_detectés.txt
+/notesPersonelles.md
 /.phpunit.cache/
 /coverage/
 /clover.xml
