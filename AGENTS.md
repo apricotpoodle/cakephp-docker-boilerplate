@@ -4,15 +4,16 @@
 
 Ce workspace contient :
 
-- l’infrastructure locale Docker Compose et le `Makefile` à la racine ;
+- l’infrastructure locale Docker Compose et le `Makefile` dans ce dépôt racine ;
 - l’application CakePHP 5.3 dans `app/`, qui constitue un dépôt Git imbriqué ;
-- les décisions d’architecture dans `app/docs/adr/`.
+- les décisions d’infrastructure dans `docs/adr/` et les décisions
+  applicatives dans `app/docs/adr/`.
 
-Avant toute modification applicative, consulter les ADR pertinents dans
-`app/docs/adr/`. Les ADR au statut **Accepté** constituent les conventions
-d’architecture en vigueur. Les ADR au statut **Proposé** donnent la direction
-souhaitée ; signaler explicitement tout conflit, ambiguïté ou besoin de
-validation avant de les appliquer largement.
+Avant une modification, consulter les ADR pertinents du dépôt concerné. Les
+ADR au statut **Accepté** constituent les conventions d’architecture en
+vigueur. Les ADR au statut **Proposé** donnent la direction souhaitée ;
+signaler explicitement tout conflit, ambiguïté ou besoin de validation avant
+de les appliquer largement.
 
 ## Commandes terminal et RTK
 
@@ -94,10 +95,14 @@ validation avant de les appliquer largement.
 
 - Documenter les changements structurants dans le README local pertinent
   (`src/`, `Controller/`, `Api/`, `Mailer/`, `Model/Table/`, JavaScript, etc.).
+- Les décisions relatives à Docker, Make ou à la structure de ce dépôt sont
+  documentées dans `docs/adr/`. Les décisions métier ou applicatives restent
+  dans `app/docs/adr/`, conformément à l’ADR applicatif 0021.
 - Toute décision architecturale nouvelle ou évolution importante d’un patron
-  existant doit être proposée sous forme d’ADR dans `app/docs/adr/`.
-- Un nouvel ADR est numéroté séquentiellement, ajouté à
-  `app/docs/adr/README.md`, créé avec le statut `Proposé`, puis soumis à revue.
+  existant doit être proposée sous forme d’ADR dans le dépôt concerné.
+- Un nouvel ADR est numéroté séquentiellement dans son propre dépôt, ajouté à
+  l’index `docs/adr/README.md` correspondant, créé avec le statut `Proposé`,
+  puis soumis à revue.
 - Ne pas modifier rétroactivement un ADR accepté pour masquer une divergence :
   créer un nouvel ADR qui l’amende ou le rend obsolète.
 
@@ -145,19 +150,54 @@ Un changement est terminé uniquement lorsque :
 
 ## Git
 
-- Le dépôt applicatif `app/` suit le Feature Branch Flow : ne pas développer
-  directement sur `main`.
-- Les branches suivent notamment `feature/`, `fix/` ou `refactor/`.
-- Avant toute modification de code, vérifier et annoncer à l’utilisateur la
-  branche active du dépôt concerné, puis proposer une nouvelle branche dédiée
-  au travail. Attendre sa confirmation explicite avant de créer la branche et
-  de modifier le code. Ne jamais développer sur la branche déjà active ni
-  réutiliser une branche préexistante ; si le nom proposé existe déjà, le
-  signaler et proposer un nom inédit.
-- Les commits sont atomiques et utilisent Conventional Commits, avec une
-  description en français, par exemple :
-  `feat(utilisateurs): ajoute le filtre par département`.
-  Les commits n'ont pas simplement un titre mais aussi un corps aussi souvent
-  que possible.
-- Ne pas créer de branche, commit, push, pull request, fusion ou exécuter
-  `finish_feature` sans confirmation explicite de l’utilisateur.
+### Isolation par branche dans les deux dépôts
+
+- Avant toute modification, exécuter `rtk git status --short --branch` dans le
+  dépôt concerné. Ne jamais modifier directement `main` ni réutiliser une
+  branche préexistante pour une nouvelle tâche.
+- Proposer une branche dédiée inédite : `docs/...` pour la documentation et
+  les ADR, `feature/...` pour une fonctionnalité, `fix/...` pour une correction
+  et `refactor/...` pour un refactoring. Attendre la confirmation explicite de
+  l’opérateur humain avant de la créer.
+- Si l’arbre est propre, créer cette branche avant toute écriture. Si des
+  modifications préexistantes sont présentes, les identifier et les préserver.
+  Ne jamais les réinitialiser, les mettre de côté, les écraser ou les mélanger
+  à la nouvelle tâche sans décision explicite ; un worktree dédié permet de
+  les laisser dans leur arbre de travail.
+- Si le checkout est sur `main` et contient des modifications, prévenir
+  l’opérateur humain avant toute opération qui modifie le dépôt. Présenter les
+  fichiers concernés et proposer des suites possibles, par exemple un commit
+  distinct sur une branche dédiée. Attendre sa décision explicite avant de
+  créer une branche ou un worktree, d’indexer, de modifier ou de commiter.
+- Vérifier à nouveau la branche active avant la première écriture. Ces règles
+  s’appliquent aux humains et aux agents IA, y compris pour la documentation.
+  À la livraison, indiquer la branche et les fichiers modifiés pour la tâche.
+
+### Commits
+
+- Un commit porte sur une seule intention cohérente. Répartir les sujets
+  fonctionnels, documentaires ou techniques sans rapport dans des commits
+  distincts ; vérifier que le message ne décrit que les changements indexés.
+- Toute demande de commit, humaine ou issue d’un agent IA, exige la validation
+  explicite de l’opérateur humain **avant chaque** `git commit`. Préparer
+  l’index et proposer le message complet ne constitue pas cette validation.
+- Employer Conventional Commits, un scope lorsqu’il précise le sujet, une
+  description française généralement à l’infinitif, de 50 caractères au plus
+  et sans point final. Le corps, recommandé pour un changement complexe,
+  explique le quoi et le pourquoi avec des lignes de 72 caractères au plus.
+  Réserver le pied aux références de tickets et aux ruptures de compatibilité.
+
+```text
+<type>(<scope>): <description française à l’infinitif>
+
+<corps facultatif : problème, décision et effets de bord>
+
+<pied facultatif : BREAKING CHANGE, Fixes #…, Refs #…>
+```
+
+Les types autorisés sont `feat`, `fix`, `docs`, `refactor`, `perf`, `test`,
+`build`, `ci`, `style` et `chore`. Exemple :
+`docs(git): formaliser la gestion des deux dépôts`.
+
+Ne pas créer de branche, commit, push, pull request, fusion ou exécuter
+`finish_feature` sans confirmation explicite de l’opérateur humain.
