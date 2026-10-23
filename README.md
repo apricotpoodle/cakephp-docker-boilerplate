@@ -1,8 +1,9 @@
 # Boilerplate Docker pour CakePHP
 
-Ce répertoire fournit l'infrastructure locale d'une application CakePHP : PHP 8.3 avec Apache, Composer, Xdebug, PCOV, Mailpit, Docker Compose et commandes Make. Le code applicatif est monté dans `app/` et peut conserver son dépôt Git indépendant.
+Ce répertoire fournit l'infrastructure locale d'une application CakePHP : PHP 8.3 avec Apache, Composer, Xdebug, PCOV, Mailpit, Docker Compose et commandes Make. Le code applicatif est monté dans `app/` et possède son dépôt Git indépendant.
 
-> Cette racine n'est pas encore un dépôt Git. Pour en faire un boilerplate réutilisable, initialisez un dépôt dédié après avoir vérifié son contenu et ajouté une politique adaptée pour le répertoire `app/`.
+Cette racine est un dépôt Git consacré à l’infrastructure. Le répertoire
+`app/` est un dépôt Git imbriqué, indépendant et ignoré par le dépôt racine.
 
 ## Architecture
 
@@ -13,6 +14,7 @@ Ce répertoire fournit l'infrastructure locale d'une application CakePHP : PHP 8
 ├── .env.example           Modèle de configuration sans secret
 ├── docker-compose.yml     Services PHP/Apache et Mailpit
 ├── Makefile               Commandes d'exploitation, qualité et tests
+├── docs/adr/              Décisions d’architecture du dépôt racine
 └── app/                   Application CakePHP et son dépôt Git propre
 ```
 
@@ -160,12 +162,21 @@ rapports Clover et HTML temporaires générés sous `/tmp`.
 
 ## Git et réutilisation
 
-Deux stratégies sont possibles :
+L’infrastructure et l’application ont chacune leurs branches, leurs commits et
+leur historique. La documentation des décisions d’infrastructure se trouve
+dans [l’index des ADR racine](docs/adr/README.md) ; les décisions applicatives
+restent dans `app/docs/adr/`, conformément à l’ADR applicatif 0021.
 
-1. garder `app/` comme dépôt Git imbriqué et versionner séparément l'infrastructure de cette racine ;
-2. déclarer `app/` comme sous-module Git si l'infrastructure doit référencer une révision applicative précise.
+Avant de modifier l’un des dépôts, consulter son `AGENTS.md`, vérifier l’état
+Git et créer, après accord explicite, une branche dédiée. Les modifications
+préexistantes doivent être préservées ; un worktree distinct permet de les
+laisser en place. Si le checkout est sur `main` et contient des modifications,
+prévenir l’opérateur et attendre sa décision avant toute opération qui modifie
+le dépôt. Chaque commit doit être atomique et validé explicitement par
+l’opérateur humain avant son exécution.
 
-Dans les deux cas, ne versionnez jamais `.env`, les certificats privés, les rapports de couverture ou les dépendances générées. Avant le premier commit du boilerplate, ajoutez un `.gitignore` correspondant à cette politique.
+Ne versionnez jamais `.env`, les certificats privés, les rapports de couverture
+ou les dépendances générées.
 
 ## Sécurité et exploitation
 
