@@ -447,7 +447,7 @@ analyse: stan
 ## test.unit: Lance les tests unitaires sans migration ni accès à la base de données
 test.unit:
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests unitaires...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --configuration phpunit.unit.xml --testdox
+	@./tools/run-phpunit.sh --configuration phpunit.unit.xml --testdox
 
 ## test.quick: Alias lisible de test.unit
 test.quick: test.unit
@@ -501,17 +501,17 @@ test.database.check:
 ## test.integration: Lance les tests ORM avec fixtures et migrations sur daetf2_test
 test.integration: test.database.check
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests d'intégration ORM...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox tests/TestCase/Model/Table tests/TestCase/Integration/Service
+	@./tools/run-phpunit.sh --testdox tests/TestCase/Model/Table tests/TestCase/Integration/Service
 
 ## test.workflow: Lance les tests du workflow de validation et des vues SQL sur daetf2_test
 test.workflow: test.database.check
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests du workflow et des vues SQL...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox tests/TestCase/Model/Table/ValidationWorkflowViewsTest.php
+	@./tools/run-phpunit.sh --testdox tests/TestCase/Model/Table/ValidationWorkflowViewsTest.php
 
 ## test.api: Lance les tests d'intégration HTTP des API et contrôleurs web sur daetf2_test
 test.api: test.database.check
 	@printf "$(CAKE_ICO)$(BLUE) Lancement des tests d'intégration HTTP (API et web)...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox tests/TestCase/Controller
+	@./tools/run-phpunit.sh --testdox tests/TestCase/Controller
 
 ## test.coverage: Produit les rapports Clover XML et HTML avec PCOV sur daetf2_test
 test.coverage: test.database.check
@@ -549,7 +549,7 @@ test.coverage.clean:
 ## test.all: Lance toute la suite PHPUnit avec le détail lisible des scénarios
 test.all: test.database.check
 	@printf "$(CAKE_ICO)$(BLUE) Lancement de la suite complète PHPUnit...$(RESET)\n"
-	@docker compose exec -e XDEBUG_MODE=off -e APP_DEFAULT_LOCALE=fr_FR -u www-data $(PHP_SERVICE_NAME) ./vendor/bin/phpunit --testdox
+	@./tools/run-phpunit.sh --testdox
 
 ## test.all.report: Lance toute la suite et ouvre un rapport temporaire nettoyé dans $EDITOR
 test.all.report: test.database.check
