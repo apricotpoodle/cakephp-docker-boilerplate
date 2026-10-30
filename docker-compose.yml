@@ -8,6 +8,7 @@ services:
     environment:
       # Nom stable de la machine hôte, injectable dans les alertes techniques.
       APP_HOST_HOSTNAME: ${APP_HOST_HOSTNAME:-${HOSTNAME:-non-renseigne}}
+      TZ: ${APP_DEFAULT_TIMEZONE:-Europe/Paris}
 
     build:
       context: ./.dockerfile/
