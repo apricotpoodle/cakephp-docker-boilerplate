@@ -5,7 +5,7 @@
 /.env.*.local
 /.env.example.websrv30
 /.env.example.websrv31
-/docker-compose.overwrite.yml
+/docker-compose.override.yml
 
 # Certificats et clés TLS locaux.
 /localhost.crt
