@@ -183,7 +183,7 @@ Un changement est terminé uniquement lorsque :
   l’index et proposer le message complet ne constitue pas cette validation.
 - Employer Conventional Commits, un scope lorsqu’il précise le sujet, une
   description française généralement à l’infinitif, de 50 caractères au plus
-  et sans point final. Le corps, recommandé pour un changement complexe,
+  et sans point final. Le corps, toujours exigé pour quelque changement que ce soit,
   explique le quoi et le pourquoi avec des lignes de 72 caractères au plus.
   Réserver le pied aux références de tickets et aux ruptures de compatibilité.
 
