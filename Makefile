@@ -30,7 +30,7 @@ endif
 # Variables de configuration (avec valeurs par défaut si non définies dans .env)
 PROJECT_NETWORK     ?= devfab
 PROJECT_SUBNET      ?= 10.210.1.0/24
-PHP_SERVICE_NAME    ?= gdaetf
+PHP_SERVICE_NAME    ?= daeia
 IDE_HELPER_PATH     ?= src
 PHPSTAN_MEMORY_LIMIT ?= 512M
 MIGRATION_EXPORT_DIR ?= /var/www/html/tmp/migration/exports

@@ -12,13 +12,20 @@ Cette racine est un dépôt Git consacré à l’infrastructure. Le répertoire
 ├── .dockerfile/Dockerfile  Image PHP 8.3, Apache, Composer, Xdebug et PCOV
 ├── .env                   Configuration locale et secrets (non versionnée)
 ├── .env.example           Modèle de configuration sans secret
-├── docker-compose.yml     Services PHP/Apache et Mailpit
+├── docker-compose.yml     Service PHP/Apache, projet Compose gdaetf2
+├── docker-compose.override.yml  Surcharge locale facultative (Mailpit)
 ├── Makefile               Commandes d'exploitation, qualité et tests
 ├── docs/adr/              Décisions d’architecture du dépôt racine
 └── app/                   Application CakePHP et son dépôt Git propre
 ```
 
 La base MySQL n'est volontairement pas définie dans `docker-compose.yml`. Elle est un service externe ou partagé, accessible avec les variables `DATABASE_URL` et `DATABASE_TEST_URL` du fichier `.env`.
+
+Le projet Compose racine porte explicitement le nom `gdaetf2` et son service
+applicatif le nom `daeia`; Docker Compose nomme donc le conteneur
+`gdaetf2-daeia-1`. Le fichier local ignoré `docker-compose.override.yml` peut
+ajouter Mailpit au poste de développement. Cette surcharge locale n'est pas
+utilisée en production.
 
 ## Prérequis
 
