@@ -159,11 +159,14 @@ Un changement est terminé uniquement lorsque :
   les ADR, `feature/...` pour une fonctionnalité, `fix/...` pour une correction
   et `refactor/...` pour un refactoring. Attendre la confirmation explicite de
   l’opérateur humain avant de la créer.
+- Par défaut, ne pas créer de worktree séparé. Après confirmation explicite
+  de la branche dédiée, travailler dans le checkout courant.
 - Si l’arbre est propre, créer cette branche avant toute écriture. Si des
   modifications préexistantes sont présentes, les identifier et les préserver.
   Ne jamais les réinitialiser, les mettre de côté, les écraser ou les mélanger
-  à la nouvelle tâche sans décision explicite ; un worktree dédié permet de
-  les laisser dans leur arbre de travail.
+  à la nouvelle tâche sans décision explicite. Si elles empêchent de travailler
+  sans risque dans le checkout courant, demander une décision avant toute
+  écriture. Ne créer un worktree séparé que sur demande explicite.
 - Si le checkout est sur `main` et contient des modifications, prévenir
   l’opérateur humain avant toute opération qui modifie le dépôt. Présenter les
   fichiers concernés et proposer des suites possibles, par exemple un commit
