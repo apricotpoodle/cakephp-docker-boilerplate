@@ -53,7 +53,11 @@ utilisée en production.
    make init
    ```
 
-L'application est accessible sur `http://localhost:${FORWARD_APACHE_PORT}` et, si les certificats sont présents, sur `https://localhost:${FORWARD_APACHE_PORT_HTTPS}`. Mailpit est disponible sur `http://localhost:8025`.
+L'application est accessible sur `http://localhost:${FORWARD_APACHE_PORT}`
+et, si les certificats sont présents, sur
+`https://localhost:${FORWARD_APACHE_PORT_HTTPS}`. Mailpit est disponible sur
+`http://localhost:8025` uniquement si le fichier local ignoré
+`docker-compose.override.yml` est présent.
 
 ## Configuration d'environnement
 
