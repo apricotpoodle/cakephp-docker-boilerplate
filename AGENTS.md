@@ -1,5 +1,10 @@
 # Instructions de contribution — GDAETF2
 
+## Langue des échanges
+
+- Répondre en français dans tous les échanges, quelle que soit la langue de la demande, y compris pendant la planification, les mises à jour intermédiaires et la réponse finale.
+- Ne passer à une autre langue que si l’utilisateur le demande explicitement. Si un livrable est demandé dans une autre langue, le rédiger dans cette langue et garder les explications en français.
+
 ## Périmètre du dépôt
 
 Ce workspace contient :
