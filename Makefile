@@ -9,7 +9,7 @@ endif
 
 SHELL               := /bin/bash
 .DEFAULT_GOAL       := help
-.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear migration.connection-check migration.export migration.mapping migration.quality tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test integrity.audit cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
+.PHONY: help menu help.all help.docker help.tests help.maintenance setup init up down clean ps logs config network.list network.inspect network.create network.delete php.bash shell composer.install composer.update ide-helper.sync ide-helper.illuminate db.migrate db.seed cache.clear gdae.notifications migration.connection-check migration.export migration.mapping migration.quality tree.check tree.check.departments tree.check.menus tree.check.config tree.alert.test integrity.audit cs.check cs.fix lint stan analyse test.unit test.quick test.database.check test.integration test.workflow test.api test.coverage test.coverage.policies test.coverage.clean test.all test.all.report test.style check check.all
 
 # ==============================================================================
 # VARIABLES & COULEURS
@@ -84,6 +84,7 @@ help.all:
 	@printf "  $(GREEN)make php.bash$(RESET)         Ouvre un terminal Bash dans le conteneur PHP.\n"
 	@printf "  $(GREEN)make db.migrate$(RESET)       Applique les migrations de la base de données.\n"
 	@printf "  $(GREEN)make db.seed$(RESET)          Remplit la base de données (seeds).\n"
+	@printf "  $(GREEN)make gdae.notifications$(RESET) Lance manuellement les synthèses GDAE.\n"
 	@printf "  $(GREEN)make cache.clear$(RESET)      Vide tous les caches de l'application.\n"
 	@printf "\n$(PURPLE)Qualité de code & Dépendances :$(RESET)\n"
 	@printf "  $(GREEN)make composer.install$(RESET) Installe les dépendances PHP.\n"
@@ -132,6 +133,7 @@ help:
 	@printf "\n$(PURPLE)Développement :$(RESET)\n"
 	@printf "  $(GREEN)make shell$(RESET)       Ouvrir un shell dans le conteneur PHP.\n"
 	@printf "  $(GREEN)make db.migrate$(RESET)  Appliquer les migrations.\n"
+	@printf "  $(GREEN)make gdae.notifications$(RESET) Envoyer les synthèses GDAE.\n"
 	@printf "  $(GREEN)make cache.clear$(RESET) Vider les caches CakePHP.\n"
 	@printf "  $(GREEN)make migration.connection-check$(RESET) Vérifier l'accès à l'ancienne base.\n"
 	@printf "  $(GREEN)make migration.export$(RESET) Exporter les CSV historiques.\n"
@@ -342,6 +344,11 @@ ide-helper.illuminate:
 db.migrate:
 	@printf "$(DB_ICO)$(BLUE) Application des migrations...$(RESET)\n"
 	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake migrations migrate
+
+## gdae.notifications: Lance manuellement les synthèses GDAE quotidienne et hebdomadaire
+gdae.notifications:
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake validation notify-pending
+	@docker compose exec -u www-data $(PHP_SERVICE_NAME) bin/cake validation notify-accepted
 
 ## db.seed: Remplit la base de données avec les données de test
 db.seed:
